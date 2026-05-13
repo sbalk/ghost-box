@@ -1,6 +1,41 @@
 # ghost-box
 
-A boilerplate repo for running [Claude Code](https://docs.claude.com/en/docs/claude-code) in a project-scoped Docker container. Works as both a plain `docker compose` setup and a VS Code / JetBrains Dev Container.
+A boilerplate claude in docker repo as peace of mind for all the recent supply chain attacks. Assuming docker is safe, otherwise we'll probably find out soon enough at this rate.
+
+It's for running [Claude Code](https://docs.claude.com/en/docs/claude-code) in a project-scoped Docker container. Works as both a plain `docker compose` setup and a VS Code / JetBrains Dev Container.
+
+## Quick start
+
+```bash
+git clone <this-repo-url> new-project-name
+cd new-project-name
+./rename.sh                # rebrand container/volume/wrapper to match the folder
+./bin/new-project-name     # (the wrapper got renamed too)
+```
+
+`rename.sh` updates `Dockerfile`, `compose.yaml`, `.devcontainer/devcontainer.json`, this README, and renames `bin/ghost-box` so the container, named volume, and CLI wrapper all match your project. Skip it if you genuinely want everything called `ghost-box`. See [Renaming the project](#renaming-the-project) for details and the explicit-name form.
+
+On first run, `docker compose` builds the image (takes a minute or two). Subsequent runs are instant.
+
+The first time `claude` starts inside the container, it will prompt you to log in. Your credentials live in the project's named volume and persist across runs and rebuilds.
+
+## What this protects against (and what it doesn't)
+
+Most recent attacks — bad npm packages, malicious editor extensions, "paste this command to fix it" tricks — work by running on your machine as you, with full access to your SSH keys, browser logins, cloud credentials, and every other project on disk. ghost-box boxes that reach in: anything nasty runs inside a throwaway container that only sees this one project and its own little config volume.
+
+It does **not** protect you from:
+
+- **The project files themselves.** `/workspace` is the same folder on your disk, so a compromised tool can read, change, or leak anything in it — including secrets in `.env`, local DB dumps, or notes you keep alongside the code.
+- **Git push rights.** If `git` inside the box can push to your repos, so can malware inside the box — it can quietly slip a commit into a branch, tag a poisoned release, or open a PR as you.
+- **Anything you've logged into from inside the box.** GitHub, npm, PyPI, AWS, GCP, Cloudflare, Vercel, your database — once those credentials are in the container, a bad dependency can publish packages, deploy code, drop tables, or rack up a cloud bill in your name.
+- **Production and other systems you can reach.** Deploy scripts, kubectl contexts, SSH keys to staging boxes, webhook URLs — if your project can reach them, so can whatever runs in the container.
+- **Stuff that happens on someone else's machine.** Your CI runners, GitHub Actions, build servers, and registries are outside the box entirely; this does nothing for compromises that happen there.
+- **Data leaving over the network.** The container has normal internet access. Source code, tokens it scrapes, environment variables — all of it can be sent out.
+- **Commands pasted into your normal terminal.** If a "fix this" snippet ends up in your host shell instead of the container shell, you're back to running as yourself.
+- **Persistence inside the box.** The config volume sticks around on purpose so your Claude login survives restarts. A backdoor written into shell rc files or `~/.claude/` lives there too until you wipe the volume.
+- **Holes in Docker itself.** Container escapes are rare, but they do happen — a kernel bug, a Docker/runc CVE, or a misconfiguration can let something in the box break out onto the host. Unlikely today, almost certainly going to be in the news at some point.
+
+Think of it as a seatbelt, not a vault: a big improvement over running everything as yourself, but not a substitute for paying attention.
 
 ## What's in the image
 
@@ -15,18 +50,6 @@ A boilerplate repo for running [Claude Code](https://docs.claude.com/en/docs/cla
 
 - Docker Desktop, OrbStack, Colima, or another Docker-compatible engine
 - `docker compose` (bundled with Docker Desktop / OrbStack)
-
-## Quick start
-
-```bash
-git clone <this-repo-url> my-project
-cd my-project
-./bin/ghost-box
-```
-
-On first run, `docker compose` builds the image (takes a minute or two). Subsequent runs are instant.
-
-The first time `claude` starts inside the container, it will prompt you to log in. Your credentials live in the `ghost-box-home` named volume and persist across runs and rebuilds.
 
 ## Usage
 
@@ -55,7 +78,7 @@ You'll get an interactive shell at `/workspace`. `claude` is on `$PATH` if you w
 If typing `./bin/ghost-box` gets old, add a shell alias scoped to your project. For example, in `~/.zshrc`:
 
 ```bash
-alias gb="$HOME/path/to/my-project/bin/ghost-box"
+alias gb="$HOME/path/to/new-project-name/bin/ghost-box"
 ```
 
 Project-scoped helpers like [direnv](https://direnv.net/) (`PATH_add bin`) can put `bin/` on `$PATH` automatically when you `cd` into the project — useful if you work across several boxes.
