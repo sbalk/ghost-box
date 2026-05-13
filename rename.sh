@@ -41,12 +41,23 @@ for f in "${FILES[@]}"; do
 done
 
 if [ -f "bin/${OLD}" ]; then
+    sed_inplace "s/${OLD}/${NEW}/g" "bin/${OLD}"
     mv "bin/${OLD}" "bin/${NEW}"
     echo "  renamed bin/${OLD} → bin/${NEW}"
 fi
 
+# Cut ties with the template repo and start a fresh history.
+if [ -d .git ]; then
+    rm -rf .git
+    echo "  removed old .git"
+fi
+git init -q
+git add .
+git commit -q -m "Initial commit from ghost-box template"
+echo "  initialized fresh git repo with initial commit"
+
 echo
 echo "Done. Suggested next steps:"
-echo "  1. Review changes:    git diff"
-echo "  2. Match folder name: cd .. && mv \"$(basename "$(pwd)")\" \"${NEW}\" && cd \"${NEW}\""
+echo "  1. Match folder name: cd .. && mv \"$(basename "$(pwd)")\" \"${NEW}\" && cd \"${NEW}\""
+echo "  2. Push to GitHub:    gh repo create ${NEW} --private --source=. --push"
 echo "  3. Launch:            ./bin/${NEW}"

@@ -9,7 +9,7 @@ It's for running [Claude Code](https://docs.claude.com/en/docs/claude-code) in a
 ```bash
 git clone <this-repo-url> new-project-name
 cd new-project-name
-./rename.sh                      # rebrand container/volume/wrapper to match the folder
+./rename.sh                      # rebrand container/volume/wrapper + reset git history
 ./bin/new-project-name           # (the wrapper got renamed too)
 # OR
 ./bin/new-project-name danger    # to run with --dangerously-skip-permissions
@@ -102,17 +102,9 @@ You probably don't want every clone to be called `ghost-box`. There's an optiona
 ./rename.sh my-thing       # or pick an explicit name
 ```
 
-It updates `Dockerfile`, `compose.yaml`, `.devcontainer/devcontainer.json`, this README, and renames `bin/ghost-box`. After it runs, also rename the folder itself (it tells you the exact command).
-
-## Making it your own repo
-
-To detach from this template and start fresh on GitHub:
+It updates `Dockerfile`, `compose.yaml`, `.devcontainer/devcontainer.json`, this README, and renames `bin/ghost-box`. It also wipes the template's `.git` directory, runs `git init`, and makes a single initial commit so you start with a clean history. After it runs, also rename the folder itself (it tells you the exact command), then push to GitHub:
 
 ```bash
-rm -rf .git
-git init
-git add .
-git commit -m "Initial commit from ghost-box template"
 gh repo create my-thing --private --source=. --push    # or do this via the GitHub UI
 ```
 
