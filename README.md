@@ -9,13 +9,11 @@ It's for running [Claude Code](https://docs.claude.com/en/docs/claude-code) in a
 ```bash
 git clone <this-repo-url> new-project-name
 cd new-project-name
-./rename.sh                # rebrand container/volume/wrapper to match the folder
-./bin/new-project-name     # (the wrapper got renamed too)
+./rename.sh                      # rebrand container/volume/wrapper to match the folder
+./bin/new-project-name           # (the wrapper got renamed too)
+# OR
+./bin/new-project-name danger    # to run with --dangerously-skip-permissions
 ```
-
-`rename.sh` updates `Dockerfile`, `compose.yaml`, `.devcontainer/devcontainer.json`, this README, and renames `bin/ghost-box` so the container, named volume, and CLI wrapper all match your project. Skip it if you genuinely want everything called `ghost-box`. See [Renaming the project](#renaming-the-project) for details and the explicit-name form.
-
-On first run, `docker compose` builds the image (takes a minute or two). Subsequent runs are instant.
 
 The first time `claude` starts inside the container, it will prompt you to log in. Your credentials live in the project's named volume and persist across runs and rebuilds.
 
@@ -66,6 +64,14 @@ Think of it as a seatbelt, not a vault: a big improvement over running everythin
 ```
 
 You'll get an interactive shell at `/workspace`. `claude` is on `$PATH` if you want to launch it manually. `exit` leaves the container; the named volume keeps your shell history and `~/.claude` across sessions.
+
+### YOLO mode
+
+```bash
+./bin/ghost-box danger
+```
+
+Launches Claude with `--dangerously-skip-permissions`, so it stops asking before every tool call. The whole point of running in a box is that this is now a survivable choice — Claude can romp around `/workspace` and the volume freely, and everything under [What this protects against (and what it doesn't)](#what-this-protects-against-and-what-it-doesnt) still applies. Don't use this flag on the host.
 
 ### Run a one-off command
 

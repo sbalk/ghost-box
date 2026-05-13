@@ -1,2 +1,6 @@
 #!/usr/bin/env bash
+if [[ "$1" == "danger" ]]; then
+  shift
+  exec docker compose run --rm ghost-box claude --dangerously-skip-permissions "$@"
+fi
 exec docker compose run --rm ghost-box "$@"
