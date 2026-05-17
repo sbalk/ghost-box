@@ -1,6 +1,32 @@
 #!/usr/bin/env bash
-if [[ "$1" == "danger" ]]; then
+# ghost-box                       -> claude  (default)
+# ghost-box --danger [args]       -> claude --dangerously-skip-permissions [args]
+# ghost-box claude [args]         -> claude [args]   (--danger inside args is rewritten)
+# ghost-box danger [args]         -> back-compat: claude --dangerously-skip-permissions [args]
+# ghost-box bash | zsh | sh ...   -> that shell in the container
+# ghost-box <anything>            -> runs <anything> in the container
+
+# Back-compat: documented `ghost-box danger` shorthand
+if [ "${1-}" = "danger" ]; then
   shift
   exec docker compose run --rm ghost-box claude --dangerously-skip-permissions "$@"
 fi
+
+# Implicit `claude` if no command given or first token is a flag
+if [ $# -eq 0 ] || [[ "$1" == -* ]]; then
+  set -- claude "$@"
+fi
+
+# When the command is claude, rewrite --danger to the long flag
+if [ "$1" = "claude" ]; then
+  cmd=("$1"); shift
+  for a in "$@"; do
+    case "$a" in
+      --danger) cmd+=(--dangerously-skip-permissions) ;;
+      *)        cmd+=("$a") ;;
+    esac
+  done
+  exec docker compose run --rm ghost-box "${cmd[@]}"
+fi
+
 exec docker compose run --rm ghost-box "$@"

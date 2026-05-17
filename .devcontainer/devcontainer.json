@@ -9,5 +9,10 @@
   "mounts": [
     "source=ghost-box-home,target=/home/node,type=volume"
   ],
-  "remoteUser": "node"
+  "remoteUser": "node",
+  "customizations": {
+    "vscode": {
+      "terminal.integrated.defaultProfile.linux": "zsh"
+    }
+  }
 }
